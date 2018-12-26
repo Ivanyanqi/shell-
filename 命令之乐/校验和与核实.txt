@@ -1,0 +1,22 @@
+校验和(checksum)程序用来从文件中生成校验和密钥，然后利用这个校验和密钥核实文件的完整性
+文件可以通过网络或任何存储介质分发到不同的地点。出于多种原因，数据有可能在 传输过程中丢失了若干位，
+从而导致文件损坏。这种错误通常发生在从Internet上下载文件，通过 网络传输文件，或者CD光盘损坏等
+
+因此，我们需要采用一些测试方法来确定接收到的文件是否存在错误。用于文件完整性测试 的特定密钥就称为校验和
+我们对原始文件和接收到的文件都进行校验和计算。
+通过比对两者的校验和，就能够核实接收到的文件是否正确
+最知名且使用最为广泛的校验和技术是md5sum和SHA-1。
+它们对文件内容使用相应的算法来生成校验和
+
+计算md5sum
+md5sum filename > file_sum.md5
+32个字符的16进制字符
+md5sum -c file_sum.md5
+
+对目录进行校验
+md5deep -rl directory_path > directory.md5
+-r使用递归的方式
+-l使用相对路径。默认情况下，md5deep会输出文件的绝对路径
+或者也可以结合find来递归计算校验和
+find directory_path -type f -print0 | xargs -0 md5sum >> directory.md5
+md5sum -c directory.md5

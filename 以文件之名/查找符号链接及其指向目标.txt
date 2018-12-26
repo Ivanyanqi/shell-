@@ -1,0 +1,22 @@
+符号链接在类Unix系统中很常见。使用它的理由有很多，要么是为了便于存取，要么是为了维护相同代码库或程序的不同版本
+符号链接只不过是指向其他文件的指针。它在功能上类似于Mac OS中的别名或Windows中的快捷方式。
+删除符号链接不会影响到原始文件
+
+1.s 创建符号链接
+    ln -s target symbolic_link_name
+ 例如: 
+    ln -l -s /var/www ~/web
+这个命令在已登录用户的home目录中创建了一个名为Web的符号链接。该链接指向 /var/www
+ 使用下面的命令来验证是否创建链接
+ ls -l web 
+ lrwxrwxrwx 1 slynux slynux 8 2010-06-25 21:34 web -> /var/www
+ web -> /var/www表明web指向 /var/www
+
+ 2.打印出当前目录下的符号链接
+  ls - l | grep "^l"
+
+3.使用find打印当前目录以及子目录下的符号链接
+ find -type l .
+
+4.使用readlink打印出符号链接所指向的目标路径
+    readlink web

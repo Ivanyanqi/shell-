@@ -1,0 +1,7 @@
+可以通过比较文件内容来识别它们。
+校验和是依据文件内容来计算的，内容相同的文件自然会生成相同的校验和
+1.创建一些测试文件
+echo "hello" > test.txt ; cp test.txt test_cp1.txt ;cp test.txt test_cp2.txt;echo "next" > other.txt
+
+执行脚本
+bash remove_duplicates.sh

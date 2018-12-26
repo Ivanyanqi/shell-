@@ -1,0 +1,53 @@
+split -b 100k data.txt
+data.file分割成多个文件，每一个文件大小为100KB
+这些文件以xab、xac、xad的 形式命名
+这表明它们都有一个字母后缀。如果想以数字为后缀，可以另外使用-d参数。
+此外， 使用 -a length可以指定后缀长度
+
+spilt -b 100k data.txt -d -a 4
+
+除了k(KB)后缀，我们还可以使用M(MB)、G(GB)、c(byte)、w(word)等
+
+为分割后的文件指定文件名前缀
+split命令最后一个参数是PREFIX
+split [COMMAND_ARGS] PREFIX
+
+split -b 100k -a 2 data.txt spilt_file
+如果不想按照数据块大小，而是需要根据行数来分割文件的话，可以使用 -l
+split -l 1000 data.file
+
+csplit 能够依据指定的条件和字符串匹配选项对日志文件进行分割
+csplit是split工具的一个变体。split只能够根据数据大小或行数分割文件，而csplit
+可以根据文本自身的特点进行分割。是否存在某个单词或文本内容都可作为分割文件的条件
+
+cat server.log
+SERVER-1 2 [connection] 192.168.0.1 success
+[connection] 192.168.0.2 failed
+[disconnect] 192.168.0.3 pending
+[connection] 192.168.0.4 success
+SERVER-2
+[connection] 192.168.0.1 failed 3 [connection] 192.168.0.2 failed
+[disconnect] 192.168.0.3 success
+[connection] 192.168.0.4 failed
+SERVER-3
+[connection] 192.168.0.1 pending
+[connection] 192.168.0.2 pending
+[disconnect] 192.168.0.3 pending
+[connection] 192.168.0.4 failed
+
+我们需要将这个日志文件分割成server1.log、server2.log和server3.log，
+这些文件的内容分别 取自原文件中不同的SERVER部分。那么，可以使用下面的方法来实现
+
+csplit server.log /SERVER/ -n 2 -s {*} -f server -b "%02d.log" ; rm server00.log
+
+ /SERVER/ 用来匹配某一行，分割过程即从此处开始。
+ /[REGEX]/ 表示文本样式。包括从当前行(第一行)直到(但不包括)包含“SERVER”
+的匹配行。
+ {*} 表示根据匹配重复执行分割，直到文件末尾为止。可以用{整数}的形式来指定分割执
+行的次数。
+ -s 使命令进入静默模式，不打印其他信息。
+ -n 指定分割后的文件名后缀的数字个数，例如01、02、03等。
+ -f 指定分割后的文件名前缀(在上面的例子中，server就是前缀)。
+ -b 指定后缀格式。例如%02d.log，类似于C语言中printf的参数格式。在这里文件名=
+前缀+后缀=server + %02d.log。
+因为分割后的第一个文件没有任何内容(匹配的单词就位于文件的第一行中)，所以我们删 除了server00.log。

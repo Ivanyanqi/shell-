@@ -1,0 +1,57 @@
+加密技术主要用于防止数据遭受未经授权的访问
+crypt是一个简单的加密工具，它从stdin接受一个文件以及口令作为输入，然后将加密
+数据输出到Stdout(因此要对输入、输出文件使用重定向)
+
+crypt < input_file > output_file
+它会要求输入一个口令。
+我们也可以通过命令行参数来提供口令
+crypt password < input_fule > encrypted_file
+
+如果需要解密文件，可以使用
+crypt password -d < encrypted_file > output_file
+
+gpg(GNU隐私保护)是一种应用广泛的工具，它使用加密技术来保护文件，以确保数据 在送达目的地之前无法被读取
+加密文件 
+gpg -c file
+该命令采用交互方式读取口令，并生成filename.gpg。
+使用以下命令解密gpg文件
+gpg filename.gpg
+
+Base64是一组相似的编码方案，它将ASCII字符转换成以64为基数的形式(radix-64 representation)，
+以可读的ASCII字符串来描述二进制数据
+base64命令可以用来编码/解 码Base64字符串
+将文件编码成base64格式
+base64 file > output_file
+或者
+cat file | base64 > outputfile
+base64可以从stdin中进行读取
+解码base64数据
+base64 -d test1.txt > 1.out
+或者
+cat 1.out | base64 -d > 2.out
+
+md5sum与sha1sum都是单向散列算法，均无法逆推出原始数据。
+它们通常用于验证数据 完整性或为特定数据生成唯一的密钥
+
+这种类型的散列算法是存储密码的理想方案。密码使用其对应的散列值来存储。
+如果某 个用户需要进行认证，读取该用户提供的密码并转换成散列值，然后将其与之前存储的 散列值进行比对。
+如果相同，用户就通过认证，被允许访问;否则，就会被拒绝访问。 将密码以明文形式存储是件非常冒险的事，会面临安全风险
+注: 尽管使用广泛，md5sum和SHA-1已不再安全。因为计算能力 的攀升使其变得容易被破解。推荐使用bcrypt或sha512sum这类工具进行加密
+ shadow-like散列(salt散列)
+
+让我们看看如何为密码生成shadow-like salt散列。
+在Linux中，用户密码是以散列值形式存储在文件 /etc/shadow中的:
+yanqi:$6$HbMpni9t$.ZGLAhlgQr5RenT8anXXpSGFFjQn5W8qkEyuwGBtqhZsDzZqVg7/jsdoUlyCRZQ.ezCEQ4JyB35ou4Ba3dy6X0:17672:0:99999:7:::
+
+$6$HbMpni9t$.ZGLAhlgQr5RenT8anXXpSGFFjQn5W8qkEyuwGBtqhZsDzZqVg7/jsdoUlyCRZQ.ezCEQ4JyB35ou4Ba3dy6X0 这事密码对应的散列值
+
+某些情况下，我们得编写一些至关重要的管理脚本，这些脚本也许需要编辑密码，
+或是 需要用shell脚本手动添加用户。这时我们必须生成shadow密码字符串，
+并向shadow文件 中写入与上面类似的文本行。
+下面让我们看看如何用openssl生成shadow密码
+
+shadow密码通常都是salt密码。所谓SALT就是额外的一个字符串，用来起一个混淆的作用， 
+使加密更加不易被破解。salt由一些随机位组成，被用作密钥生成函数的输入之一，以生成密码的salt散列值
+
+opensslpasswd -1 -salt SALT_STRING PASSWORD
+将SALT_STRING替换为随机字符串，并将PASSWORD替换成你想要使用的密码

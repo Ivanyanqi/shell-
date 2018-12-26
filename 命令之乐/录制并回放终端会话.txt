@@ -1,0 +1,18 @@
+当你需要为别人在终端上演示某些操作或是需要准备一个命令行教程时，
+通常得一边手动输 入命令一边演示，或者也可以录制一段屏幕演示视频，然后再回放出来。其实也有其他的实现方 法。
+利用script和scriptreplay命令，我们可以录制命令的次序以及时序，
+将相关数据记录 在文本文件中。利用这些文件，其他人可以在终端上回放并查看命令的输出
+
+开始录制终端会话
+
+script -t 2> timing.log -a output.session
+type commands;
+..
+exit
+
+两个文件被当作script命令的参数。timing.log 用于存储时序信息，描述每一个命令在何时运行；
+ouptput.session 用于存储命令输出
+-t 用于将时序数据导入stderr 2> 用于将stderr重定向到timing.log
+
+利用这两个文件:timing.log(存储时序信息)和output.session(存储命令输出信息)，我们 可以按照下面的方法回放命令执行过程
+scriptreplay timing.log output.session

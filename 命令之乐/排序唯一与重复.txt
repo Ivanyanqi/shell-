@@ -1,0 +1,69 @@
+sort命令能够帮助我们对文本文件和stdin进行排序操作
+uniq是一个经常与sort一同使用的命 令。它的作用是从文本或stdin中提取唯一(或重复)的行
+sort命令既可以从特定的文件，也可以从stdin中获取输入，并将输出写入stdout。uniq
+的工作方式和sort一样
+我们可以按照下面的方式轻松地对一组文件(例如file1.txt和file2.txt)进行排序
+sort file1.txt file2.txt > sorted.txt
+或者
+sort file1.txt file2.txt -o sorted.txt
+-n 按照数字进行排序
+-r 逆序
+-M 按照月份
+合并两个以排序的文件
+sort -m sorted1 sorted2
+
+找出已排序文件中不重复的行
+sort file1.txt file2.txt | uniq
+
+检查文件是否已经排序过
+
+sort -C file;
+if [ $? -eq 0 ]   // # $? 事上一个命令的推出状态或者函数的返回值 一般情况下，大部分命令执行成功会返回 0，失败返回 1
+then
+    echo sorted
+else 
+    echo "not sorted"
+fi
+
+根据健或者列进行排序
+依据第一列排序
+sort -nrk 1 data.txt
+k指定了排序应该按照哪一个键(key)来进行。键指的是列号，而列号就是执行排序时的 依据。
+-r告诉sort命令按照逆序进行排序
+-nr表明按照数字，采用逆序形式排序
+
+依据第二列排序
+sort -k 2 data.txt
+一定要留意用于按数字顺序进行排序的选项-n。
+sort命令对于字母表排序和数字排序有不同的处理方式。
+因此如果要采用数字顺序排序，就应该明确地给出-n选项
+
+通常在默认情况下，键就是文本文件中的列。列与列之间用空格分隔
+
+但有时候，我们需要 将特定范围内的一组字符(例如，key1=character4-character8)作为键。
+在这种情况下， 必须明确地将键指定为某个范围内的字符这个范围可以用键起止的字符位置来表明
+sort -nk 2,3 data.txt
+把醒目的字符作为数值键。为了提取这个键，用字符在行内的起止位置作为键的书写格式
+在上面的例子中，起止位置是2和3
+
+sort -bd unsorted.txt
+选项-b用于忽略文件中的前导空白行，选项-d用于指明以字典序进行排序
+
+uniq命令通过消除重复内容，从给定输入中(stdin或命令行参数文件)找出唯一的行
+uniq只能作用于排过序的数据输入
+
+重复的行只被打印一次
+uniq sorted.txt 或者 cat sort unsorted | uniq
+只显示唯一的行(在输入文件中没有重复出现的行,重复的行)
+uniq -u sorted.txt
+统计各行在文件中出现的次数
+uniq -c sorted.txt
+找出文件中重复的行
+uniq -d sorted.txt
+
+集合-s 和 -w 来指定健
+ -s 指定可以跳过前n个字符
+ -w 指定用于比较的最大字符数
+
+sort uniqswtest.txt | uniq -s 2 -w 2
+忽略前2个字符(-s 2)，使用 -w选项(-w 2)指定用于比较的最大字符数

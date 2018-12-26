@@ -1,0 +1,67 @@
+环回(loopback)文件系统是Linux类系统中非常有趣的部分。我们通常是在设备上(例如磁 盘分区)创建文件系统。
+这些存储设备能够以设备文件的形式来使用，比如 /dev/device_name。 为了使用存储设备上的文件系统，
+我们需要将其挂载到一些被称为挂载点(mount point)的目录 上。
+环回文件系统是指那些在文件中而非物理设备中创建的文件系统。我们可以将这些文件作为文件系统挂载到挂载点上。这实际上可以让我们在物理磁盘上的文件中创建逻辑磁盘。
+
+如何在大小为1GB的文件中创建ext4文件系统
+1.创建一个1GB大小的文件
+    dd if=/dev/zero of=loopbackfile.img bs=1G count=1
+  你会发现创建好的文件大小超过了1GB。这是因为硬盘作为块设备，其分配存储空 间时是按照块大小的整数倍来进行的
+2.用mkfs命令将1GB的文件格式化成ext4文件系统
+    mkfs.ext4 loopbackfile.img
+3.使用下面的命令检查文件系统
+    file loopbackfile.img
+    loopbackfile.img: Linux rev 1.0 ext4 filesystem data, UUID=c9d56c42-f8e6-4cbd-aeab-369d5056660a (extents) (large files) (huge files)
+4.挂载环回文件
+    mkdir /mnt/loopback
+    mount -o loop loopbackfile.img /mnt/loopback
+    -o loop用来挂载环回文件系统
+    这实际上是一种快捷的挂载方法，我们无需手动连接任何设备。但是在内部，这个 环回文件连接到了一个名为/dev/loop1或loop2的设备上
+5.手动挂载
+    losetup /dev/loop1 loopbackfile.img
+    mount /dev/loop1 /mnt/loopback
+6.卸载
+   # umount mount_point
+例如 : umount /mnt/loopback
+7.也可以用设备文件的路径作为umount命令的参数
+    umount /dev/loop1
+#注意，因为mount和umount都是特权命令，所以必须以root用户的身份来执行
+
+我们首先使用dd命令创建了一个文件，准备将其作为环回文件使用。dd是一个用于复制原始数据(raw data)的通用命令。
+它将数据从if参数所指定的文件复制到of参数所指定的文件中。另外，我们指定dd以大小为1GB的块为单位进行复制，共复制1块,这样就创建了一个1GB的文件。
+/dev/zero是一个特殊的文件，如果读取这个文件，读出的内容都是0
+然后使用mkfts. ext4命令在该文件中创建ext4文件系统。我们需要文件系统才能将文件存 储到磁盘或环回文件
+最后，我们使用mount命令将环回文件挂载到挂载点上(在这个例子中是/mnt/loopback)。
+挂载点使得用户可以访问文件系统中的文件。在执行mount命令之前，应该先使用mkdir命令创建挂载点。选项-o loop用于指明使用的是环回文件
+当mount知道它使用的是环回文件时，它会自动在/dev中建立一个对应该环回文件的设备并 进行挂载。如果想手动操作，可以使用losetup命令建立设备，然后使用mount命令挂载
+
+补充内容
+1. 在环回镜像中创建分区
+假设我们需要创建环回文件，然后分区并挂载其中某个分区。
+在这种情况下，没法使用mount –o loop。我们必须手动建立设备并挂载分区。使用下面的方法对文件(内容全部填充为0)进行分区
+losetup /dev/loop1 loopback.img
+fdisk /dev/loop1
+在loopback.img中创建分区并挂载第一个分区
+losetup -o 32256 /dev/loop2 loopback.img
+/dev/loop2表示第一个分区，-o用来指定偏移量，32256字节用于DOS分区方案1。第一个分区 在硬盘上起始于32256字节处
+
+losetup 中的 -o 32256 (512*63=32256)用于设置数据偏移。
+由于历史原因，硬盘第一个扇区(512 字节)作 为 MBR(Master Boot Record，主引导记录)，其后的62个扇区作为保留扇区
+
+2.快速挂载带有分区的环回磁盘镜像
+如果我们希望挂载环回磁盘镜像中的分区，可以将分区偏移量以手动的形式传递给 losetup。
+不过，有一个更快的方法可以挂载镜像中的所有分区——kpartx。它并没有安装默 认在系统中，你得使用软件包管理器进行安装
+kpartx -v -a diskimage.img
+这条命令在磁盘镜像中的分区与/dev/mapper中的设备之间建立了映射，随后便可以挂载这些设备
+挂载第一个分区：mount /dev/mapper/loop0p1 /mnt/disk1
+当你处理完该设备上的操作后(使用umount卸载所有挂载过的分区)，使用下列命令移除映 射关系
+kpartx -d diskimage.img
+3.将ISO文件作为环回文件挂载
+ISO文件是光学存储介质的归档。我们可以采用挂载环回文件的方法，像挂载物理光盘一样挂载ISO文件
+我们甚至可以用一个非空目录作为挂载路径。那么在设备被卸载之前，这个挂载路径中包含的都是来自该设备的数据，而非目录中的原始内容
+ mkdir /mnt/iso
+ mount -o loop linux.iso /mnt/iso
+ 现在就可以用/mnt/iso中的文件进行操作了。ISO是一个只读文件系统
+ 4.使用sync即刻应用更改
+    当对挂载设备作出更改之后，这些改变并不会被立即写入物理设备。只有当缓冲区被写满之后才会进行设备回写。
+    但是我们可以用sync命令强制将更改即刻写入

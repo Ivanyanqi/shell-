@@ -1,0 +1,14 @@
+rename命令利用Perl正则表达式修改文件名。
+综合运用find、rename和mv，我们能做到的事其实很多
+
+重命名 .jpg 和 .png 文件 
+rename.sh
+
+其他重命名方法
+将 *.JPG 重命名为 *.jpg
+rename *.JPG *.jpg
+将文件名中的空格替换成字符_
+rename 's/ /_/g' *
+'s/ /_/g'用于替换文件名，而 * 是用于匹配目标文件的通配符
+转换文件名的大小写
+rename 'y/A-Z/a-z/' * 
